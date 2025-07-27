@@ -4,21 +4,44 @@ import fitz  # PyMuPDF
 
 class ResumeParser:
     def __init__(self):
-        self.skills_db = [
-            "python", "java", "c++", "machine learning", "deep learning", "nlp",
-            "data analysis", "sql", "javascript", "react", "docker",
-            "aws", "azure", "git", "html", "css", "tensorflow", "pytorch",
-            "flask", "django", "linux", "excel", "communication", "teamwork"
-        ]
+        self.skill_categories = {
+            "programming_languages": ["python", "java", "c", "c++", "c#", "javascript", "typescript", "ruby", "go", "swift", "kotlin"],
+            "web_development": ["html", "css", "javascript", "react", "angular", "vue", "django", "flask", "node.js", "express"],
+            "database": ["mysql", "postgresql", "sqlite", "mongodb", "redis", "oracle"],
+            "tools_and_platforms": ["git", "docker", "kubernetes", "aws", "azure", "gcp", "firebase", "linux"],
+            "machine_learning": ["tensorflow", "pytorch", "scikit-learn", "keras", "pandas", "numpy", "opencv", "matplotlib"],
+            "soft_skills": ["communication", "teamwork", "problem solving", "leadership", "time management", "adaptability"]
+        }
 
-    def extract_skills(self, resume_text: str) -> list:
+    def extract_skills(self, resume_text: str, grouped=False):
         resume_text = resume_text.lower()
-        extracted_skills = set()
-        for skill in self.skills_db:
-            pattern = r'\b' + re.escape(skill) + r'\b'
-            if re.search(pattern, resume_text):
-                extracted_skills.add(skill)
-        return list(extracted_skills)
+        extracted = {} if grouped else set()
+
+        for category, skills in self.skill_categories.items():
+            found = []
+            for skill in skills:
+                pattern = r'\b' + re.escape(skill.lower()) + r'\b'
+                if re.search(pattern, resume_text):
+                    if grouped:
+                        found.append(skill)
+                    else:
+                        extracted.add(skill)
+            if grouped and found:
+                extracted[category] = found
+
+        return extracted if grouped else list(extracted)
+
+    def extract_projects(self, resume_text: str) -> list:
+        resume_text = resume_text.lower()
+        project_keywords = ["project", "developed", "built", "created", "implemented", "designed"]
+        lines = resume_text.split("\n")
+        projects = []
+
+        for line in lines:
+            if any(kw in line for kw in project_keywords) and len(line.strip()) > 20:
+                projects.append(line.strip())
+
+        return list(set(projects))
 
 
 def extract_text_from_pdf(pdf_path):
@@ -45,17 +68,17 @@ def read_resume_text(file_path):
 
 
 if __name__ == "__main__":
-    data_folder = "data"
     parser = ResumeParser()
+    test_file = "data/sample_resume.pdf"  # Replace with your test file
+    text = read_resume_text(test_file)
 
-    for filename in os.listdir(data_folder):
-        if filename.lower().endswith((".pdf", ".txt")):
-            filepath = os.path.join(data_folder, filename)
-            text = read_resume_text(filepath)
-            if text.strip():
-                skills = parser.extract_skills(text)
-                print(f"Resume: {filename}")
-                print(f"Extracted Skills: {skills}")
-                print("-" * 40)
-            else:
-                print(f"No text extracted from {filename}")
+    skills = parser.extract_skills(text, grouped=True)
+    projects = parser.extract_projects(text)
+
+    print("Extracted Skills by Category:")
+    for category, skill_list in skills.items():
+        print(f"{category}: {skill_list}")
+
+    print("\nExtracted Projects:")
+    for proj in projects:
+        print(f"- {proj}")
