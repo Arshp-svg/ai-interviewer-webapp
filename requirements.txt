@@ -1,17 +1,10 @@
-streamlit==1.25.0
-pymupdf==1.22.5               # For PDF text extraction
-firebase-admin==6.0.1         # Firebase SDK for server-side
-google-auth==2.22.0           # Required by firebase-admin
-google-cloud-firestore==2.10.0
-google-cloud-storage==2.11.0
-firebase==4.1.1               # For client-side Firebase Auth if used (optional)
-
-SpeechRecognition==3.8.1      # For voice input
-PyAudio==0.2.13               # For microphone access (may need system dependencies)
-gtts==2.3.1                   # Google Text-to-Speech for voice output
-playsound==1.3.0       # Play audio files
-
-spacy==3.5.0                 # Optional NLP processing
-en-core-web-sm==3.5.0         # SpaCy English model
-
-python-dotenv==1.0.0          # For environment variables management (optional)
+streamlit
+pymupdf
+openai
+SpeechRecognition
+pyttsx3
+pyaudio
+firebase-admin
+spacy
+sentence-transformers
+requests
