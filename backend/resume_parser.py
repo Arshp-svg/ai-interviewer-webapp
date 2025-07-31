@@ -74,6 +74,7 @@ if __name__ == "__main__":
 
     skills = parser.extract_skills(text, grouped=True)
     projects = parser.extract_projects(text)
+    
 
     print("Extracted Skills by Category:")
     for category, skill_list in skills.items():

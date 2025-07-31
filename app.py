@@ -1,11 +1,9 @@
+
 import streamlit as st
 import os
 import sys
 import uuid
-
-# Add the parent directory to path so we can import from backend
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
+from backend.question_generator import QuestionGenerator
 from backend.resume_parser import ResumeParser, read_resume_text
 
 
@@ -56,9 +54,13 @@ def main():
             st.warning("No projects found in the resume.")
 
         # Optionally: Add "Start Interview" button
-        if st.button("🎙️ Start Interview"):
+        if st.button("Generate AI Question"):
             st.success("Ready to start the voice interview!")
             # Proceed to next step — use `skills` + `projects` in AI engine
+            question_generator = QuestionGenerator()
+            question, _ = question_generator.generate_ai_question(skills, projects)
+            st.session_state.generated_question = question
+            st.success(f"Generated question: {question}")
 
 if __name__ == "__main__":
     main()
