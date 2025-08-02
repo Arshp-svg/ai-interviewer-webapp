@@ -1,10 +1,10 @@
-
 import streamlit as st
 import os
 import sys
 import uuid
 from backend.question_generator import QuestionGenerator
 from backend.resume_parser import ResumeParser, read_resume_text
+from backend.speech_io import SpeechIO
 
 
 
@@ -56,11 +56,12 @@ def main():
         # Optionally: Add "Start Interview" button
         if st.button("Generate AI Question"):
             st.success("Ready to start the voice interview!")
-            # Proceed to next step — use `skills` + `projects` in AI engine
             question_generator = QuestionGenerator()
             question, _ = question_generator.generate_ai_question(skills, projects)
             st.session_state.generated_question = question
             st.success(f"Generated question: {question}")
+            sio = SpeechIO()
+            sio.speak(question)
 
 if __name__ == "__main__":
     main()

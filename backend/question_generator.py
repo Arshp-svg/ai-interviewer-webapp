@@ -34,7 +34,8 @@ class QuestionGenerator:
             flat_skills = skills
         prompt = (
             "You are an HR manager conducting a technical interview. "
-            "Given the following candidate skills and projects, generate a unique, realistic, and challenging interview question. "
+            "consider the candidate is a fresh graduate with no prior experience. "
+            "Given the following candidate skills and projects, generate a unique, realistic, simple interview question based on skills and projects. "
             "do not ask to implement any code or algorithms."
             "Do not repeat previous questions. "
             "Just ask question no other information is needed."
