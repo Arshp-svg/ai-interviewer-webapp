@@ -1,28 +1,33 @@
 import pyttsx3
 import speech_recognition as sr
+import tempfile
 import os
-
-
 
 class SpeechIO:
     
-    def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-        self.engine = pyttsx3.init()
-    def speak(self, text):
-        """Convert text to speech."""
-        self.engine.say(text)
-        self.engine.runAndWait()
+    def speak(self,text):
+        # Initialize the text-to-speech engine
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
 
-    def listen(self):
-        """Listen for audio input and convert it to text."""
-        with self.microphone as source:
-            audio = self.recognizer.listen(source)
+    def listen_for_answer(self, timeout=15):
+        # listen for an answer using the microphone
+        recognizer = sr.Recognizer()
+        mic = sr.Microphone()
+        with mic as source:
+            print("Listening for an answer...")
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source, timeout=timeout)
         try:
-            return self.recognizer.recognize_google(audio)
+            answer = recognizer.recognize_google(audio)
+            print(f"Candidate said: {answer}")
+            return answer
         except sr.UnknownValueError:
-            return "Sorry, I could not understand the audio."
-        except sr.RequestError:
-            return "Sorry, there was an error with the speech recognition service."
-    
+            print("Could not understand the audio")
+            return ""
+        except sr.RequestError as e:
+            print(f"Could not request results; {e}")
+            return ""
+
+

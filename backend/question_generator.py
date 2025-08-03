@@ -9,7 +9,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 
 class QuestionGenerator:
-    def __init__(self, groq_api_key=GROQ_API_KEY, model="llama-3.3-70b-versatile"):
+    def __init__(self, groq_api_key=GROQ_API_KEY, model="gemma2-9b-it"):
         
         self.parser = ResumeParser()
         skills = self.parser

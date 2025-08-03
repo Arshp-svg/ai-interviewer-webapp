@@ -5,7 +5,7 @@ import uuid
 from backend.question_generator import QuestionGenerator
 from backend.resume_parser import ResumeParser, read_resume_text
 from backend.speech_io import SpeechIO
-
+from backend.answer_analyzer import analyze_answer_with_ai
 
 
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
@@ -62,6 +62,17 @@ def main():
             st.success(f"Generated question: {question}")
             sio = SpeechIO()
             sio.speak(question)
+            answer = sio.listen_for_answer()
+            st.session_state.candidate_answer = answer
+            groq_client = question_generator.client
+
+            # Analyze the answer using AI
+            if answer and groq_client:
+                score, justification = analyze_answer_with_ai(answer, question, groq_client)
+                st.session_state.ai_feedback = {"score": score, "justification": justification}
+                st.success(f"AI Feedback: {justification}")
+            else:
+                st.warning("No answer detected.")
 
 if __name__ == "__main__":
     main()
