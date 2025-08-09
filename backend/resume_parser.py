@@ -69,7 +69,7 @@ def read_resume_text(file_path):
 
 if __name__ == "__main__":
     parser = ResumeParser()
-    test_file = "data/sample_resume.pdf"  # Replace with your test file
+    test_file = "data/sample_resume.pdf"
     text = read_resume_text(test_file)
 
     skills = parser.extract_skills(text, grouped=True)
