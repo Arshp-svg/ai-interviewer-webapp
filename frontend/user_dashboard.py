@@ -63,9 +63,13 @@ def start_interview():
 
             # Analyze the answer using AI
             if answer and groq_client:
-                score, justification = analyze_answer_with_ai(answer, question, groq_client)
-                st.session_state.ai_feedback = {"score": score, "justification": justification}
-                st.success(f"AI Feedback: {justification}")
+                result = analyze_answer_with_ai(answer, question, groq_client)
+                st.session_state.analysis_result = result
+                st.success(f"Communication Score: {result['Communication']['score']}")
+                st.success(f"Technical Score: {result['Technical']['score']}")
+                st.success(f"Problem Solving Score: {result['Problem_Solving']['score']}")
+                st.success(f"Confidence Score: {result['Confidence']['score']}")
+                # You can also access justifications:
             else:
                 st.warning("No answer detected.")
 
