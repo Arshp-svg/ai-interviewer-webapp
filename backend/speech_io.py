@@ -16,18 +16,18 @@ class SpeechIO:
         recognizer = sr.Recognizer()
         mic = sr.Microphone()
         with mic as source:
-            print("Listening for an answer...")
+            # Remove console logging for security
             recognizer.adjust_for_ambient_noise(source)
             audio = recognizer.listen(source, timeout=timeout)
         try:
             answer = recognizer.recognize_google(audio)
-            print(f"Candidate said: {answer}")
+            # Remove logging of user speech for privacy
             return answer
         except sr.UnknownValueError:
-            print("Could not understand the audio")
+            # Audio not understood - return empty string silently
             return ""
-        except sr.RequestError as e:
-            print(f"Could not request results; {e}")
+        except sr.RequestError:
+            # Speech service error - return empty string silently
             return ""
 
 

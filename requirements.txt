@@ -5,8 +5,13 @@ SpeechRecognition
 pyttsx3
 pyaudio
 firebase-admin
-spacy
-sentence-transformers
 requests
 groq
 pyrebase4
+plotly
+pandas
+python-dotenv
+# Optional dependencies for enhanced parsing
+# numpy>=1.21.0,<2.0.0
+# spacy>=3.4.0,<4.0.0
+# sentence-transformers

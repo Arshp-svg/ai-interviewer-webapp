@@ -7,21 +7,24 @@ def analyze_answer_with_ai(answer, question, groq_client, model="llama-3.3-70b-v
     prompt = (
         f"Question: {question}\n"
         f"Candidate's Answer: {answer}\n"
-        "As an HR interviewer, rate the answer from 1 to 10 and provide a brief justification. "
-        "Respond in JSON: {\"score\": <score>, \"justification\": \"...\"}"
+        "As an HR interviewer, analyze this answer and provide:\n"
+        "1. A score from 1 to 10\n"
+        "2. A brief justification\n"
+        "3. The category this question falls under (technical, communication, analytical, leadership, problem_solving)\n"
+        "Respond in JSON: {\"score\": <score>, \"justification\": \"...\", \"category\": \"...\"}"
     )
     response = groq_client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": prompt}],
-        max_tokens=100,
+        max_tokens=150,
         temperature=0.3,
         n=1,
     )
 
     try:
         result = json.loads(response.choices[0].message.content)
-        return result["score"], result["justification"]
+        return result["score"], result["justification"], result.get("category", "general")
     except Exception:
-        return None, "Could not parse AI response."
+        return None, "Unable to analyze response at this time.", "general"
 
 
