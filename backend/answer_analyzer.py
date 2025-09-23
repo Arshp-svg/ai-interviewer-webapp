@@ -17,7 +17,7 @@ def analyze_answer_with_ai(answer, question, groq_client, model="llama-3.3-70b-v
         model=model,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=150,
-        temperature=0.3,
+        temperature=0.9,
         n=1,
     )
 

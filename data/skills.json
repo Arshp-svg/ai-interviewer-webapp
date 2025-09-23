@@ -1,8 +1,0 @@
-{
-  "programming_languages": ["python", "java", "c", "c++", "c#", "javascript", "typescript", "ruby", "go", "swift", "kotlin"],
-  "web_development": ["html", "css", "javascript", "react", "angular", "vue", "django", "flask", "node.js", "express"],
-  "database": ["mysql", "postgresql", "sqlite", "mongodb", "redis", "oracle"],
-  "tools_and_platforms": ["git", "docker", "kubernetes", "aws", "azure", "gcp", "firebase", "linux"],
-  "machine_learning": ["tensorflow", "pytorch", "scikit-learn", "keras", "pandas", "numpy", "opencv", "matplotlib"],
-  "soft_skills": ["communication", "teamwork", "problem solving", "leadership", "time management", "adaptability"]
-}
