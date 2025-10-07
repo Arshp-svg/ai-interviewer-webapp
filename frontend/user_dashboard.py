@@ -7,7 +7,7 @@ import json
 import dotenv
 from backend.question_generator import QuestionGenerator
 from backend.resume_parser import ResumeParser, read_resume_text
-from backend.speech_io import SpeechIO
+from backend.cloud_speech_io import SpeechIO
 from backend.answer_analyzer import analyze_answer_with_ai
 from backend.interview_summary import show_interview_summary, show_question_feedback
 
@@ -127,7 +127,6 @@ def store_answer_to_firebase(db, candidate_uid, interview_id, question_data):
         return False
 
 
-
 def timed_interview_session():
     """Simple interview function - exactly 10 questions (2 per category) - Voice Only"""
     # Initialize interview data
@@ -172,30 +171,37 @@ def timed_interview_session():
         with st.expander("📖 Question Text (for reference)"):
             st.write(st.session_state.interview_data['current_question'])
         
-        # Voice answer input only
-        st.subheader("🎤 Voice Answer")
-        st.info("🔊 Click the button below and speak your answer clearly into the microphone.")
+        # Simple voice answer input
+        st.subheader("🎤 Record Your Answer")
+        st.info("🔊 Click the microphone button below to record up to 30 seconds. Your speech will be converted to text automatically.")
         
+        # Add visual recording instructions
+        with st.expander("📋 Recording Tips for Better Results", expanded=False):
+            st.markdown("""
+            **For best speech recognition:**
+            - 🔊 **Speak clearly and at normal pace**
+            - 🎯 **Stay close to your microphone** (2-3 feet)
+            - 🔇 **Minimize background noise**
+            - 📢 **Speak loud enough** but don't shout
+            - ⏱️ **Pause briefly** between sentences
+            - 🗣️ **Use simple, clear language**
+            - 🔄 **If it fails, try recording again** or use text input
+            """)
+        
+        try:
+            speech_io = SpeechIO()
+            voice_answer = speech_io.listen_for_answer(timeout=30)
+            
+            if voice_answer and voice_answer.strip():
+                st.success("✅ Answer received and processed!")
+                process_answer(voice_answer.strip())
+        except Exception as e:
+            st.error(f"❌ Audio input failed: {str(e)}. Please try again.")
+        
+        # Repeat question option
         col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            if st.button("🎙️ Record Answer", type="primary"):
-                with st.spinner("🎧 Listening... Please speak your answer clearly."):
-                    try:
-                        speech_io = SpeechIO()
-                        voice_answer = speech_io.listen_for_answer(timeout=30)
-                        
-                        if voice_answer and voice_answer.strip():
-                            st.success("✅ Answer recorded successfully!")
-                            st.write(f"**Your Answer:** {voice_answer}")
-                            process_answer(voice_answer.strip())
-                        else:
-                            st.warning("⚠️ No speech detected or couldn't understand. Please try again.")
-                    except Exception as e:
-                        st.error("❌ Voice recording failed. Please try again.")
-        
         with col2:
-            if st.button("� Repeat Question"):
+            if st.button("🔊 Repeat Question"):
                 try:
                     speech_io = SpeechIO()
                     speech_io.speak(st.session_state.interview_data['current_question'])
@@ -203,11 +209,14 @@ def timed_interview_session():
                 except Exception as e:
                     st.warning("⚠️ Voice output failed.")
     else:
-        # Generate first question or next question
-        if st.button("🚀 Start/Next Question", type="primary"):
-            generate_and_ask_question()
-
-# show_interview_summary function moved to backend/interview_summary.py
+        # Start interview or generate next question
+        if st.session_state.interview_data['question_count'] == 0:
+            if st.button("🚀 Start Interview", type="primary"):
+                generate_and_ask_question()
+        else:
+            st.success(f"✅ Question {st.session_state.interview_data['question_count']} completed!")
+            if st.button("➡️ Next Question", type="primary"):
+                generate_and_ask_question()
 
 def generate_and_ask_question():
     """Generate next question - 2 questions per category"""
@@ -338,10 +347,6 @@ def process_answer(answer):
                     speech_io.speak("Congratulations! Your interview is now complete. Please review your detailed results below.")
                 except:
                     pass
-            else:
-                # Show progress info for next question
-                questions_completed = st.session_state.interview_data['question_count']
-                st.info(f"✨ Ready for question {questions_completed + 1}? Click 'Start/Next Question' above to continue.")
             
             st.rerun()  # Refresh to show next question or summary
         else:
@@ -349,28 +354,6 @@ def process_answer(answer):
             
     except Exception:
         st.error("❌ Error analyzing answer. Please try again.")
-
-def end_interview():
-    """End the interview manually (before 10 questions)"""
-    question_count = st.session_state.interview_data['question_count']
-    
-    # Reset interview data
-    st.session_state.interview_data = {
-        'question_count': 0,
-        'interview_id': str(uuid.uuid4()),
-        'current_question': None,
-        'categories_used': {
-            'technical_skills': 0,
-            'communication': 0,
-            'problem_solving': 0,
-            'leadership': 0,
-            'experience': 0
-        },
-        'total_score': 0
-    }
-    
-    st.success(f"✅ Interview ended! You answered {question_count} questions.")
-    st.rerun()
 
 def start_interview():
     st.title("📄 AI Interviewer - Resume Upload")
