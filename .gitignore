@@ -205,3 +205,10 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Streamlit secrets (IMPORTANT: Never commit secrets!)
+.streamlit/secrets.toml
+
+# Environment variables
+.env
+.env.local

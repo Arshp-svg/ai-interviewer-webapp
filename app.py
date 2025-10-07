@@ -19,14 +19,19 @@ st.set_page_config(
 @st.cache_resource
 def init_firebase():
     """Initialize Firebase connection (cached)"""
-    dotenv.load_dotenv()
-    firebaseConfig = os.getenv("FIREBASE_CONFIG")
-    if not firebaseConfig:
-        st.error("❌ System configuration error. Please contact support.")
-        st.stop()
-    
     try:
-        config = json.loads(firebaseConfig)
+        # Try to get Firebase config from Streamlit secrets first (for cloud deployment)
+        if hasattr(st, 'secrets') and 'FIREBASE_CONFIG' in st.secrets:
+            config = dict(st.secrets["FIREBASE_CONFIG"])
+        else:
+            # Fallback to environment variables (for local development)
+            dotenv.load_dotenv()
+            firebaseConfig = os.getenv("FIREBASE_CONFIG")
+            if not firebaseConfig:
+                st.error("❌ System configuration error. Please contact support.")
+                st.stop()
+            config = json.loads(firebaseConfig)
+        
         firebase = pyrebase.initialize_app(config)
         auth = firebase.auth()
         db = firebase.database()
