@@ -12,18 +12,37 @@ import plotly.graph_objects as go
 def get_firebase_db():
     """Get Firebase database from session state"""
     if 'firebase_db' not in st.session_state:
-        # Load environment variables
-        dotenv.load_dotenv()
-        firebaseConfig = os.getenv("FIREBASE_CONFIG")
-        
-        if not firebaseConfig:
-            st.error("❌ System configuration error. Please contact support.")
-            return None
-        
+        # Try to get Firebase config from Streamlit secrets first
         try:
+            if hasattr(st, 'secrets') and 'FIREBASE_CONFIG' in st.secrets:
+                firebaseConfig = dict(st.secrets["FIREBASE_CONFIG"])
+            else:
+                # Fallback to environment variables and secrets.toml
+                dotenv.load_dotenv()
+                firebaseConfig = os.getenv("FIREBASE_CONFIG")
+                
+                if not firebaseConfig:
+                    # Try to read from secrets.toml directly
+                    try:
+                        import toml
+                        secrets_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".streamlit", "secrets.toml")
+                        if os.path.exists(secrets_path):
+                            secrets = toml.load(secrets_path)
+                            if 'FIREBASE_CONFIG' in secrets:
+                                firebaseConfig = secrets['FIREBASE_CONFIG']
+                            else:
+                                st.error("❌ Firebase configuration not found in secrets.toml")
+                                return None
+                        else:
+                            st.error("❌ System configuration error. Please contact support.")
+                            return None
+                    except ImportError:
+                        st.error("❌ Missing toml package")
+                        return None
+                else:
+                    firebaseConfig = json.loads(firebaseConfig)
+
             import pyrebase
-            if isinstance(firebaseConfig, str):
-                firebaseConfig = json.loads(firebaseConfig)
             firebase = pyrebase.initialize_app(firebaseConfig)
             st.session_state.firebase_db = firebase.database()
             st.session_state.firebase_auth = firebase.auth()

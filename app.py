@@ -28,16 +28,34 @@ def init_firebase():
             dotenv.load_dotenv()
             firebaseConfig = os.getenv("FIREBASE_CONFIG")
             if not firebaseConfig:
-                st.error("❌ System configuration error. Please contact support.")
-                st.stop()
-            config = json.loads(firebaseConfig)
+                # Try to read from secrets.toml directly for local development
+                try:
+                    import toml
+                    secrets_path = os.path.join(os.path.dirname(__file__), ".streamlit", "secrets.toml")
+                    if os.path.exists(secrets_path):
+                        secrets = toml.load(secrets_path)
+                        if 'FIREBASE_CONFIG' in secrets:
+                            config = secrets['FIREBASE_CONFIG']
+                        else:
+                            st.error("❌ Firebase configuration not found in secrets.toml")
+                            st.stop()
+                    else:
+                        st.error("❌ System configuration error. Please contact support.")
+                        st.stop()
+                except ImportError:
+                    st.error("❌ Missing toml package. Install with: pip install toml")
+                    st.stop()
+            else:
+                config = json.loads(firebaseConfig)
         
         firebase = pyrebase.initialize_app(config)
         auth = firebase.auth()
         db = firebase.database()
         return auth, db
     except Exception as e:
-        st.error("❌ Failed to connect to authentication service. Please contact support.")
+        st.error(f"❌ Failed to connect to authentication service: {str(e)}")
+        st.info("💡 Check your Firebase configuration in .streamlit/secrets.toml")
+        st.stop()
         st.stop()
 
 # Initialize Firebase
