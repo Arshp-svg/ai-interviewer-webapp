@@ -278,14 +278,20 @@ def generate_and_ask_question():
             # Speak the question aloud
             try:
                 speech_io = SpeechIO()
-                speech_io.speak(question)
                 # Show which question number this will be (current count + 1)
                 next_question_num = st.session_state.interview_data['question_count'] + 1
                 st.success(f"🔊 Speaking Question {next_question_num}/10 - {current_category.replace('_', ' ').title()}")
+                speech_io.speak(question)
+                
+                # Add a small delay to let audio start, then refresh to show recording interface
+                import time
+                time.sleep(20)  # Give audio time to start
+                st.rerun()  # Refresh to show the recording interface
             except Exception as e:
                 st.warning("⚠️ Voice output failed, but question is ready.")
+                st.rerun()  # Still refresh even if audio fails
             
-            st.rerun()
+            # No st.rerun() needed - let the audio play without interruption
         else:
             st.warning("⚠️ Unable to generate question. Please try again.")
             

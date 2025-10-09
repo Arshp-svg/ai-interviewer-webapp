@@ -15,33 +15,42 @@ class CloudSpeechIO:
         self.recognizer.phrase_threshold = 0.3
     
     def speak(self, text):
-        """Text-to-speech functionality using file generation for cloud compatibility"""
+        """Text-to-speech functionality using Edge-TTS for cloud compatibility"""
         import tempfile
         import os
+        import asyncio
         
         audio_file_path = None
         audio_played = False
         
         try:
-            import pyttsx3
+            import edge_tts
             
             # Generate temporary audio file
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+            with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_file:
                 audio_file_path = temp_file.name
             
-            # Initialize TTS engine and save to file
-            engine = pyttsx3.init()
+            # Use Edge-TTS to generate speech
+            async def generate_speech():
+                # Use a high-quality English voice
+                voice = "en-US-JennyNeural"  # Natural-sounding female voice
+                communicate = edge_tts.Communicate(text, voice)
+                await communicate.save(audio_file_path)
             
-            # Configure voice settings for better quality
-            voices = engine.getProperty('voices')
-            if voices:
-                engine.setProperty('voice', voices[0].id)  # Use first available voice
-            engine.setProperty('rate', 150)  # Slower speech rate
-            engine.setProperty('volume', 0.9)  # High volume
+            # Run the async function
+            # Always use a separate thread to avoid event loop conflicts
+            import threading
+            def run_in_thread():
+                new_loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(new_loop)
+                try:
+                    new_loop.run_until_complete(generate_speech())
+                finally:
+                    new_loop.close()
             
-            # Save speech to file instead of playing directly
-            engine.save_to_file(text, audio_file_path)
-            engine.runAndWait()
+            thread = threading.Thread(target=run_in_thread)
+            thread.start()
+            thread.join(timeout=10)  # 10 second timeout
             
             # Check if file was created successfully
             if os.path.exists(audio_file_path) and os.path.getsize(audio_file_path) > 0:
@@ -51,14 +60,14 @@ class CloudSpeechIO:
                 
                 # Play through browser using st.audio
                 st.success("🔊 Playing question audio:")
-                st.audio(audio_bytes, format="audio/wav")
+                st.audio(audio_bytes, format="audio/mp3")
                 audio_played = True
                 
             else:
                 st.warning("🔇 Audio generation failed")
                 
         except ImportError:
-            st.warning("🔇 Text-to-speech library not available")
+            st.warning("🔇 Edge-TTS library not available")
         except Exception as e:
             st.warning(f"🔇 Audio generation error: {str(e)}")
         
