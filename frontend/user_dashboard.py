@@ -198,6 +198,24 @@ def timed_interview_session():
         except Exception as e:
             st.error(f"❌ Audio input failed: {str(e)}. Please try again.")
         
+        # Alternative text input option
+        st.markdown("---")
+        st.markdown("### 📝 Or Type Your Answer")
+        
+        text_answer = st.text_area(
+            "Alternative: Type your answer here",
+            height=120,
+            placeholder="Type your detailed answer here...",
+            key="text_answer_input"
+        )
+        
+        if st.button("📝 Submit Text Answer", type="secondary", key="submit_text"):
+            if text_answer.strip():
+                st.success("✅ Text answer submitted!")
+                process_answer(text_answer.strip())
+            else:
+                st.warning("Please enter an answer before submitting.")
+        
         # Repeat question option
         col1, col2 = st.columns([1, 1])
         with col2:

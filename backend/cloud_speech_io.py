@@ -15,18 +15,89 @@ class CloudSpeechIO:
         self.recognizer.phrase_threshold = 0.3
     
     def speak(self, text):
-        """Text-to-speech functionality"""
+        """Text-to-speech functionality using file generation for cloud compatibility"""
+        import tempfile
+        import os
+        
+        audio_file_path = None
+        audio_played = False
+        
         try:
             import pyttsx3
+            
+            # Generate temporary audio file
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                audio_file_path = temp_file.name
+            
+            # Initialize TTS engine and save to file
             engine = pyttsx3.init()
-            engine.say(text)
+            
+            # Configure voice settings for better quality
+            voices = engine.getProperty('voices')
+            if voices:
+                engine.setProperty('voice', voices[0].id)  # Use first available voice
+            engine.setProperty('rate', 150)  # Slower speech rate
+            engine.setProperty('volume', 0.9)  # High volume
+            
+            # Save speech to file instead of playing directly
+            engine.save_to_file(text, audio_file_path)
             engine.runAndWait()
-        except:
-            # Fallback: just display text
-            st.info(f"🔊 **Question:** {text}")
+            
+            # Check if file was created successfully
+            if os.path.exists(audio_file_path) and os.path.getsize(audio_file_path) > 0:
+                # Read the audio file
+                with open(audio_file_path, 'rb') as audio_file:
+                    audio_bytes = audio_file.read()
+                
+                # Play through browser using st.audio
+                st.success("🔊 Playing question audio:")
+                st.audio(audio_bytes, format="audio/wav")
+                audio_played = True
+                
+            else:
+                st.warning("🔇 Audio generation failed")
+                
+        except ImportError:
+            st.warning("🔇 Text-to-speech library not available")
+        except Exception as e:
+            st.warning(f"🔇 Audio generation error: {str(e)}")
+        
+        finally:
+            # Clean up: Delete temporary file
+            if audio_file_path and os.path.exists(audio_file_path):
+                try:
+                    os.unlink(audio_file_path)
+                except:
+                    pass  # Ignore cleanup errors
+        
+        # Always show visual question for accessibility
+        st.markdown(
+            f"""
+            <div style="
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                border-left: 5px solid #ffd700;
+                margin: 15px 0;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            ">
+                <h3 style="margin: 0 0 10px 0; color: #ffd700;">
+                    🎤 Interview Question
+                </h3>
+                <p style="margin: 0; font-size: 18px; line-height: 1.4; font-weight: 500;">
+                    {text}
+                </p>
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+        
+        if not audio_played:
+            st.info("💡 **Tip:** You can read the question above if audio doesn't work on your device.")
     
     def listen_for_answer(self, timeout=30):
-        """Record audio and convert to text"""
+        """Record audio and convert to text with user confirmation"""
         try:
             from audio_recorder_streamlit import audio_recorder
             
@@ -46,8 +117,27 @@ class CloudSpeechIO:
                 # Show audio playback
                 st.audio(audio_bytes, format="audio/wav")
                 
-                # Convert to text
-                return self._convert_audio_to_text(audio_bytes)
+                # Convert to text but don't auto-submit
+                text_result = self._convert_audio_to_text(audio_bytes)
+                
+                if text_result:
+                    # Show the converted text and ask for confirmation
+                    st.markdown("### 📝 Your Transcribed Answer:")
+                    st.info(f"**Converted Text:** {text_result}")
+                    
+                    # Create confirmation buttons
+                    col1, col2 = st.columns([1, 1])
+                    with col1:
+                        if st.button("✅ Submit This Answer", type="primary", key="confirm_submit"):
+                            return text_result
+                    with col2:
+                        if st.button("🔄 Record Again", key="record_again"):
+                            st.rerun()
+                    
+                    st.info("👆 Please confirm your answer or record again")
+                    return None
+                else:
+                    return None
             
             return None
             
